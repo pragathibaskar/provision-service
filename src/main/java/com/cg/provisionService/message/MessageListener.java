@@ -17,6 +17,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
 
 
 
@@ -29,6 +31,9 @@ public class MessageListener {
 	
 	@Autowired
 	private ProvisionService svc;
+	
+	@Autowired
+       private Tracer tracer;
 	
 	@StreamListener(target = Sink.INPUT, 
 			condition="headers['message']=='outofdate'")
@@ -43,6 +48,8 @@ public class MessageListener {
 			 Cert cert = message.getPayload();
 			 Message<Cert> message1 = new Message<Cert>("CertTramitadaEvent", cert);
 			 message1.setLabel("checkContract-Ok-6");
+			 Span span = tracer.buildSpan("Sending Tramitada Event from microservice 2 to microservice 3").start();
+			  span.finish();
 				messageSender.sendTramitada(message1);
 		 }
 		 else
@@ -51,6 +58,8 @@ public class MessageListener {
 			 Cert cert = message.getPayload();
 			 Message<Cert> message1 = new Message<Cert>("ProvisionesDenegadaEvent", cert);
 			 message1.setLabel("checkContract-Denegada-6");
+			  Span span = tracer.buildSpan("Sending ProvisionesDenegada Event from microservice 2 to microservice 1").start();
+			  span.finish();
 				messageSender.sendProvisionDenegada(message1);
 		 }
 	
